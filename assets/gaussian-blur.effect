@@ -1,0 +1,109 @@
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: blur-hor-vs
+      frag: blur-fs
+      pass: blur-x
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+    - vert: blur-vert-vs
+      frag: blur-fs
+      pass: blur-y
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+}%
+
+CCProgram blur-hor-vs %{
+  precision highp float;
+  #include <legacy/input-standard>
+  #include <builtin/uniforms/cc-global>
+  #include <common/common-define>
+
+  uniform MyConstants {
+    vec4 blurParams;
+  };
+
+  out vec2 v_uv;
+  out vec2 v_uv1;
+  out vec2 v_uv2;
+  out vec2 v_uv3;
+  out vec2 v_uv4;
+
+  void main () {
+    StandardVertInput In;
+    CCVertInput(In);
+    CC_HANDLE_GET_CLIP_FLIP(In.position.xy);
+    gl_Position = In.position;
+    gl_Position.y = gl_Position.y;
+    v_uv = a_texCoord;
+    
+    vec2 texelSize = cc_nativeSize.zw;
+    float blurOffsetX = blurParams.x * texelSize.x;
+
+    v_uv1 = v_uv + vec2(blurOffsetX * 1.0, 0.0);
+    v_uv2 = v_uv - vec2(blurOffsetX * 1.0, 0.0);
+    v_uv3 = v_uv + vec2(blurOffsetX * 2.0, 0.0);
+    v_uv4 = v_uv - vec2(blurOffsetX * 2.0, 0.0);
+  }
+}%
+
+CCProgram blur-vert-vs %{
+  precision highp float;
+  #include <legacy/input-standard>
+  #include <builtin/uniforms/cc-global>
+  #include <common/common-define>
+
+  uniform MyConstants {
+    vec4 blurParams;
+  };
+
+  out vec2 v_uv;
+
+  out vec2 v_uv1;
+  out vec2 v_uv2;
+  out vec2 v_uv3;
+  out vec2 v_uv4;
+
+  void main () {
+    StandardVertInput In;
+    CCVertInput(In);
+    CC_HANDLE_GET_CLIP_FLIP(In.position.xy);
+    gl_Position = In.position;
+    gl_Position.y = gl_Position.y;
+    v_uv = a_texCoord;
+    
+    vec2 texelSize = cc_nativeSize.zw;
+    float blurOffsetY = blurParams.x * texelSize.y;
+
+    v_uv1 = v_uv + vec2(0.0, blurOffsetY * 1.0);
+    v_uv2 = v_uv - vec2(0.0, blurOffsetY * 1.0);
+    v_uv3 = v_uv + vec2(0.0, blurOffsetY * 2.0);
+    v_uv4 = v_uv - vec2(0.0, blurOffsetY * 2.0);
+  }
+}%
+
+CCProgram blur-fs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+
+  in vec2 v_uv;
+  in vec2 v_uv1;
+  in vec2 v_uv2;
+  in vec2 v_uv3;
+  in vec2 v_uv4;
+
+  #pragma rate outputResultMap pass
+  uniform sampler2D outputResultMap;
+
+  layout(location = 0) out vec4 fragColor;
+
+  void main () {
+
+    vec4 o = texture(outputResultMap,v_uv);
+    fragColor.rgba = vec4(o.rrrr);
+
+  }
+}%
