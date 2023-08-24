@@ -82,11 +82,6 @@ export class GaussianBlurPass extends postProcess.SettingPass {
     name = 'GaussianBlurPass';
     outputNames = ['GaussianBlurMap'];
 
-    private getDepthMap(camera: renderer.scene.Camera) {
-        let forwardPass = builder.getPass(postProcess.ForwardPass);
-        return forwardPass.slotName(camera, 1);
-    }
-
     public render(camera: renderer.scene.Camera, ppl: rendering.Pipeline): void {
         const setting = this.setting;
         if (!setting.material) {
@@ -102,19 +97,6 @@ export class GaussianBlurPass extends postProcess.SettingPass {
 
         passContext.clearBlack();
         const format = Format.RGBA8;
-
-        let showDepth = true;
-        if(showDepth){
-            let input = this.getDepthMap(camera);
-            passContext
-                .updatePassViewPort()
-                .addRenderPass(`blur-y`, `blur-y${cameraID}`)
-                .setPassInput(input, 'outputResultMap')
-                .addRasterView(this.slotName(camera), format)
-                .blitScreen(1)
-                .version();
-            return;
-        }
 
         let input = this.lastPass!.slotName(camera, 0);
         for (let i = 0; i < setting.iterations; ++i) {
