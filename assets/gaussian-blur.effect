@@ -102,8 +102,14 @@ CCProgram blur-fs %{
 
   void main () {
 
-    vec4 o = texture(outputResultMap,v_uv);
-    fragColor.rgba = vec4(o.rrrr);
+    vec3 weights = vec3(0.4026,0.2442,0.0545);
+    vec3 sum = texture(outputResultMap, v_uv).rgb * weights.x;
 
+    sum += texture(outputResultMap, v_uv1).rgb * weights.y;
+    sum += texture(outputResultMap, v_uv2).rgb * weights.y;
+    sum += texture(outputResultMap, v_uv3).rgb * weights.z;
+    sum += texture(outputResultMap, v_uv4).rgb * weights.z;
+
+    fragColor = vec4(sum, 1.0);
   }
 }%
